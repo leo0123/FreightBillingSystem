@@ -9,8 +9,14 @@ var headers = {
 };
 
 $(document).ready(function () {
-  var tbInvoiceDate = $("[id$='_Invoice_x0020_Date']");
+  var originalSaveButtonClickHandler;
+  var saveButton = $("[name$='diidIOSaveItem']") //gets form save button and ribbon save button
+  if (saveButton.length > 0) {
+    originalSaveButtonClickHandler = saveButton[0].onclick;  //save original function
+  }
+  $(saveButton).attr("onclick", "window.myPreSaveAction1()"); //change onclick to execute our custom validation function
 
+  var tbInvoiceDate = $("[id$='_Invoice_x0020_Date']");
   var cbFactory = $("[id^='Charge_x0020_to_x0020_Factory_']");
   var trFactory = cbFactory.parentsUntil("tr").last().parent();
   trFactory.hide();
@@ -41,7 +47,7 @@ $(document).ready(function () {
     }
   });
 
-  fetchFactories()
+  /*fetchFactories()
     .then(d => {
       d.results.forEach(item => {
         ddlFactory.append($("<option></option>")
@@ -51,9 +57,9 @@ $(document).ready(function () {
       if (selectedFactory) {
         ddlFactory.val(selectedFactory);
       }
-    });
+    });*/
 
-  window.myPreSaveAction = async () => {
+  window.myPreSaveAction1 = async () => {
     try {
       var vendorName = $("#ReactFieldRenderer_InvoiceType > select").val();
       var invoiceNumber = $("[id^='Title_'][id$='_$TextField']").val();
@@ -84,8 +90,10 @@ $(document).ready(function () {
     var today = new Date();
     var invoiceDate = Date.parse(tbInvoiceDate.val());
     if (invoiceDate > today) {
+      alert("invoice date not correct");
       return false;
     }
+    originalSaveButtonClickHandler();
     return true;
   }
 });
