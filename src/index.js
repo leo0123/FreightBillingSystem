@@ -1,6 +1,8 @@
 import "babel-polyfill";
 import "isomorphic-fetch";
 import $ from "jquery";
+//import myUtility from "C:\\MyJsUtility\\src\\Utility.js";
+// import myUtility from "MyJsUtility";
 
 var urlFactory = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('Factories')/Items";
 var urlInvoice = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('LogisticInvoices')/Items";
@@ -9,12 +11,16 @@ var headers = {
 };
 
 $(document).ready(function () {
+  // var id = myUtility.getParam(ID);
+  // if (id) {
+  //   alert(id);
+  // }
   var originalSaveButtonClickHandler;
   var saveButton = $("[name$='diidIOSaveItem']") //gets form save button and ribbon save button
   if (saveButton.length > 0) {
     originalSaveButtonClickHandler = saveButton[0].onclick;  //save original function
   }
-  $(saveButton).attr("onclick", "window.myPreSaveAction1()"); //change onclick to execute our custom validation function
+  $(saveButton).attr("onclick", "window.myPreSaveAction2()"); //change onclick to execute our custom validation function
 
   var tbInvoiceDate = $("[id$='_Invoice_x0020_Date']");
   var cbFactory = $("[id^='Charge_x0020_to_x0020_Factory_']");
@@ -59,7 +65,29 @@ $(document).ready(function () {
       }
     });*/
 
-  window.myPreSaveAction1 = async () => {
+  // window.myPreSaveAction3 = () => {
+  //   var vendorName = $("#ReactFieldRenderer_InvoiceType > select").val();
+  //     var invoiceNumber = $("[id^='Title_'][id$='_$TextField']").val();
+  //     var company = $("[id^='CompanyCode_'][id$='_$DropDownChoice']").val();
+  //     if (vendorName != null) {
+  //       vendorName = vendorName.replace(/'/g, "''");
+  //     }
+  //     var url = urlInvoice + "?$filter="
+  //       + "InvoiceType eq '" + vendorName + "'" //vendor
+  //       + " and "
+  //       + "Title eq '" + invoiceNumber + "'" // invoice#
+  //       + " and "
+  //       + "CompanyCode eq '" + company + "'";
+  //     console.log(url);
+  //     fetchJson(url).then(d => {
+  //       console.log(d);
+  //       console.log("originalSaveButtonClickHandler3");
+  //       originalSaveButtonClickHandler();
+  //       console.log("originalSaveButtonClickHandler3e");
+  //     });
+  // };
+  
+  window.myPreSaveAction2 = async () => {
     try {
       var vendorName = $("#ReactFieldRenderer_InvoiceType > select").val();
       var invoiceNumber = $("[id^='Title_'][id$='_$TextField']").val();
@@ -81,6 +109,7 @@ $(document).ready(function () {
       }
     }
     catch (ex) {
+      console.log(ex);
       return false;
     }
     if (cbFactory.prop("checked") == true && ddlFactory.val() == "") {
@@ -93,9 +122,15 @@ $(document).ready(function () {
       alert("invoice date not correct");
       return false;
     }
-    originalSaveButtonClickHandler();
+    console.log("original Save");
+    var callOriginalSaveButtonClickHandler = setInterval(function(){
+      console.log("original Save2");
+      originalSaveButtonClickHandler();
+      clearInterval(callOriginalSaveButtonClickHandler); 
+    }, 100);
+    //originalSaveButtonClickHandler();
     return true;
-  }
+  };
 });
 
 async function fetchFactories() {

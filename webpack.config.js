@@ -16,7 +16,18 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['env']
+            // presets: ['es2015']
+            "presets": [
+              ["env", {
+                "targets": {
+                  "browsers": ["last 2 versions", "ie >= 11"]
+                },
+                  "useBuiltIns": true,
+              }],
+            ],
+            "plugins": [
+                "transform-remove-strict-mode"
+            ]
           }
         }
       }
