@@ -1,8 +1,8 @@
 import "babel-polyfill";
 import "isomorphic-fetch";
 import $ from "jquery";
-//var myUtility = require("my-utility").default;
-import myUtility from "./Utility.js";
+var myUtility = require("my-utility").default;
+//import myUtility from "./Utility.js";
 
 var urlFactory = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('Factories')/Items";
 var urlInvoice = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('LogisticInvoices')/Items";
