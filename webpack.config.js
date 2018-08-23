@@ -15,20 +15,20 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
-          options: {
-            // presets: ['es2015']
-            "presets": [
-              ["env", {
-                "targets": {
-                  "browsers": ["last 2 versions", "ie >= 11"]
-                },
-                  "useBuiltIns": true,
-              }],
-            ],
-            "plugins": [
-                "transform-remove-strict-mode"
-            ]
-          }
+          // options: {
+          //   // presets: ['es2015']
+          //   "presets": [
+          //     ["env", {
+          //       "targets": {
+          //         "browsers": ["last 2 versions", "ie >= 11"]
+          //       },
+          //         "useBuiltIns": true,
+          //     }],
+          //   ],
+          //   "plugins": [
+          //       "transform-remove-strict-mode"
+          //   ]
+          // }
         }
       }
     ]
