@@ -2,9 +2,14 @@ const path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-  entry: ["babel-polyfill", "./src/index.js"],
+  // entry: ["babel-polyfill", "./src/index.js"],
+  entry: {
+    // 'babel-polyfill': ["babel-polyfill"],
+    FBSBundle: ["babel-polyfill", "./src/index.js"],
+    FBSDisplayBundle: "./src/display.js"
+  },
   output: {
-    filename: 'FBSBundle.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },
   devtool: "source-map",
@@ -33,7 +38,7 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader','css-loader']
+        use: ['style-loader', 'css-loader']
       }
     ]
   },

@@ -19,32 +19,33 @@ let getTR = element => {
 };
 
 $(document).ready(async function () {
-  let amountText = $("[id^='Amount_']");
+  // let amountText = $("[id^='Amount_']");
   let categorySelect = $("[id^='Category_'][type=radio]");
   let profitCenterAmountTr = getTR($("#profitCenterAmountContainer"));
+  let taxAmountTr = getTR($("[id^='TaxAmount_']"));
+  let companySelect = $("[id^='CompanyCode_']");
   let profitCenterTaxAmountText = $("[id^='ProfitCenterTaxAmount_']");//ProfitCenterTaxAmount_
   let profitCenterTaxAmountTr = getTR(profitCenterTaxAmountText);
-  profitCenterTaxAmountTr.hide();
-  let customsRadio = getTR($("[id^='Category_'][type=radio][value='Customs']"));//Customs
+  profitCenterTaxAmountText.hide();
+  // let customsRadio = getTR($("[id^='Category_'][type=radio][value='Customs']"));//Customs
   //customsRadio.hide();
-  if (categorySelect.filter(":checked").val() == "Customs") {//Customs
-    profitCenterAmountTr.hide();
-    profitCenterTaxAmountTr.show();
-  } else {
-    profitCenterAmountTr.show();
-    profitCenterTaxAmountTr.hide();
-  }
-  categorySelect.change(function () {
-    if (this.value == "Customs") {//Customs
+  let categorySwitch = category => {
+    if (category == "Customs") {
       profitCenterAmountTr.hide();
+      taxAmountTr.hide();
       profitCenterTaxAmountTr.show();
     } else {
       profitCenterAmountTr.show();
+      taxAmountTr.show();
       profitCenterTaxAmountTr.hide();
     }
+  };
+  categorySwitch(categorySelect.filter(":checked").val());
+  categorySelect.change(function () {
+    categorySwitch(this.value);
   })
 
-  await profitCenterTaxAmountFunction(profitCenterTaxAmountText);
+  await profitCenterTaxAmountFunction(profitCenterTaxAmountText, companySelect);
 
   var path = window.location.pathname;
   var page = path.split("/").pop();
@@ -131,7 +132,7 @@ $(document).ready(async function () {
     try {
       let amountText = $("[id^='Amount_']");
       amountText.focus();
-      
+
       var vendorName = $("#ReactFieldRenderer_InvoiceType > select").val();
       var invoiceNumber = $("[id^='Title_'][id$='_$TextField']").val();
       var company = $("[id^='CompanyCode_'][id$='_$DropDownChoice']").val();
@@ -169,7 +170,7 @@ $(document).ready(async function () {
     // }
     var today = new Date();
     var invoiceDate = Date.parse(tbInvoiceDate.val());
-    if (invoiceDate > today) {
+    if (isNaN(invoiceDate) || invoiceDate > today) {
       alert("invoice date not correct");
       return false;
     }
@@ -186,6 +187,7 @@ $(document).ready(async function () {
 
 function profitCenterTaxAmountValidation(categorySelect, amountText, profitCenterTaxAmountText) {
   let customsMsg = $("#customsMsg");
+  customsMsg.text("");
   if (categorySelect.filter(":checked").val() != "Customs") {//Customs
     return true;
   }
@@ -201,16 +203,27 @@ function profitCenterTaxAmountValidation(categorySelect, amountText, profitCente
   }
   let isValid = true;
   let amount = 0;
+  let tryParseFloat = text => {
+    if (text == "") {
+      text = "0";
+    }
+    return parseFloat(text);
+  };
   ProfitCenterTaxAmounts.forEach(item => {
     if (item.ProfitCenter == "") {
       customsMsg.text("ProfitCenterTaxAmount ProfitCenter can't be empty");
       isValid = false;
     }
-    amount += item.BaseDuty + item.TrumpDuty + item.MechandiseFee + item.WaterwaysFee;
+    amount += tryParseFloat(item.BaseDuty)
+      + tryParseFloat(item.TrumpDuty)
+      + tryParseFloat(item.MechandiseFee)
+      + tryParseFloat(item.WaterwaysFee);
   });
   let invoiceAmount = amountText.val();
-  if (invoiceAmount != amount) {
-    customsMsg.text(`InvoiceAmount: ${invoiceAmount} and ProfitCenterTaxAmount: ${amount} not match`);
+  // console.log(Math.round(parseFloat(invoiceAmount) * 100));
+  // console.log(Math.round(amount * 100));
+  if (Math.round(parseFloat(invoiceAmount) * 100) != Math.round(amount * 100)) {
+    customsMsg.text(`InvoiceAmount: ${invoiceAmount} and ProfitCenterTaxAmount: ${amount.toFixed(2)} not match`);
     isValid = false;
   }
   if (isValid) {
@@ -219,9 +232,9 @@ function profitCenterTaxAmountValidation(categorySelect, amountText, profitCente
   return isValid;
 }
 
-async function profitCenterTaxAmountFunction(profitCenterTaxAmountText) {
-  profitCenterTaxAmountText.hide();
-  let companySelect = $("[id^='CompanyCode_']");
+async function profitCenterTaxAmountFunction(profitCenterTaxAmountText, companySelect) {
+  //profitCenterTaxAmountText.hide();
+  //let companySelect = $("[id^='CompanyCode_']");
   let customsContainer = $("<div id='customsContainer'></div>");
   profitCenterTaxAmountText.after(customsContainer);
   profitCenterTaxAmountText.after($("<div id='customsMsg' style='color:red'></div>"));
@@ -268,7 +281,7 @@ async function fetchFactories() {
 async function fetchProfitCenters() {
   let now = new Date();
   let today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  return await fetchJson(urlProfitCenter + `?$filter=DateFrom lt '${today}' and DateTo gt '${today}'`);
+  return await fetchJson(urlProfitCenter + `?$top=999&$orderby=Title&$filter=DateFrom lt '${today}' and DateTo gt '${today}'`);
 }
 
 function fetchJson(url) {

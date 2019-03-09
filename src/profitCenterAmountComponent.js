@@ -13,7 +13,8 @@ class ProfitCenterAmountComponent extends Component {
             //     MechandiseFee: 300,
             //     WaterwaysFee: 400,
             // }],
-            data: props.profitCenterAmounts
+            data: props.profitCenterAmounts,
+            msg: ""
         };
         this.renderEditable = this.renderEditable.bind(this);
         this.renderSelect = this.renderSelect.bind(this);
@@ -24,24 +25,24 @@ class ProfitCenterAmountComponent extends Component {
 
     clearData() {
         let data = [];
-        this.setState({data});
+        this.setState({ data });
     }
 
     handleAdd() {
         let data = this.state.data;
         data.push({
             ProfitCenter: "",
-            BaseDuty: 0,
-            TrumpDuty: 0,
-            MechandiseFee: 0,
-            WaterwaysFee: 0,
+            BaseDuty: "",
+            TrumpDuty: "",
+            MechandiseFee: "",
+            WaterwaysFee: "",
         });
         this.setState({ data });
     }
 
     renderDelete(cellInfo) {
         return (
-            <input type="button" value="delete" className="ms-ButtonHeightWidth" onClick={e=>{
+            <input type="button" value="delete" className="ms-ButtonHeightWidth" onClick={e => {
                 const data = [...this.state.data];
                 data.splice(cellInfo.index, 1);
                 this.setState({ data });
@@ -53,20 +54,24 @@ class ProfitCenterAmountComponent extends Component {
     renderSelect(cellInfo) {
         return (
             <select value={this.state.data[cellInfo.index][cellInfo.column.id]}
-            onChange={e => {
-                const data = [...this.state.data];
-                data[cellInfo.index][cellInfo.column.id] = e.target.value;
-                this.setState({ data });
-                this.props.onChange(data);
-            }}>
-                
+                onChange={e => {
+                    const data = [...this.state.data];
+                    let value = e.target.value;
+                    if (value == "-select-") {
+                        value = "";
+                    }
+                    data[cellInfo.index][cellInfo.column.id] = value;
+                    this.setState({ data });
+                    this.props.onChange(data);
+                }}>
+                <option key="">-select-</option>
                 {this.props.profitCenters.filter(item => item.Company == this.props.company.val())
                     .map(item => <option key={item.ProfitCenter}>{item.ProfitCenter}</option>)}
             </select>
         );
     }
 
-    
+
 
     renderEditable(cellInfo) {
         // tryParseInt = text => {
@@ -74,6 +79,12 @@ class ProfitCenterAmountComponent extends Component {
         //     console.log(int);
         //     return int;
         // };
+        tryParseFloat = text => {
+            if (text == "") {
+                text = "0";
+            }
+            return parseFloat(text);
+        };
 
         return (
             <div
@@ -82,8 +93,26 @@ class ProfitCenterAmountComponent extends Component {
                 suppressContentEditableWarning
                 onBlur={e => {
                     const data = [...this.state.data];
-                    data[cellInfo.index][cellInfo.column.id] = parseInt(e.target.innerHTML);
-                    this.setState({ data });
+                    //const regexp = /^(\d*\.)?\d+$/;
+                    const regexp = /^\d+(\.\d\d?)?$/;
+                    if (e.target.innerHTML == "" || regexp.test(e.target.innerHTML) == true) {
+                        data[cellInfo.index][cellInfo.column.id] = e.target.innerHTML;
+                    } else {
+                        alert(e.target.innerHTML + " is not valid number format");
+                        e.target.innerHTML = "";
+                        data[cellInfo.index][cellInfo.column.id] = "";
+                        e.target.focus();
+                    }
+                    console.log("test:" + data[cellInfo.index][cellInfo.column.id]);
+                    let amount = 0;
+                    data.forEach(item => {
+                        amount += tryParseFloat(item.BaseDuty)
+                            + tryParseFloat(item.TrumpDuty)
+                            + tryParseFloat(item.MechandiseFee)
+                            + tryParseFloat(item.WaterwaysFee);
+                    })
+                    let msg = "Total amount:" + amount.toFixed(2);
+                    this.setState({ data, msg });
                     this.props.onChange(data);
                 }}
                 dangerouslySetInnerHTML={{
@@ -149,12 +178,13 @@ class ProfitCenterAmountComponent extends Component {
         }
 
         return (<div style={divStyle}><input type="button" value="add new profit center" onClick={this.handleAdd} className="ms-ButtonHeightWidth"></input>
-        < ReactTable
-            data={data}
-            columns={columns}
-            showPagination={false}
-            minRows={1}
-        /></div>)
+            <div>{this.state.msg}</div>
+            < ReactTable
+                data={data}
+                columns={columns}
+                showPagination={false}
+                minRows={1}
+            /></div>)
     }
 }
 
