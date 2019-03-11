@@ -29,6 +29,7 @@ class Customs extends Component {
             TrumpDuty: 0,
             MechandiseFee: 0,
             WaterwaysFee: 0,
+            EntryFee: 0,
         });
         this.setState({ data });
     }
@@ -122,10 +123,16 @@ class Customs extends Component {
             style: hStyle,
             accessor: 'WaterwaysFee', // String-based value accessors!
             Cell: this.renderEditable
+        }, {
+            Header: 'Entry Fee',
+            headerStyle: hStyle,
+            style: hStyle,
+            accessor: 'EntryFee', // String-based value accessors!
+            Cell: this.renderEditable
         }]
 
         const divStyle = {
-            width: 620,
+            width: 820,
         }
 
         return (<div style={divStyle}><input type="button" value="add new profit center" onClick={this.handleAdd} className="ms-ButtonHeightWidth"></input>

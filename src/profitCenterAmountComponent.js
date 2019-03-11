@@ -36,6 +36,7 @@ class ProfitCenterAmountComponent extends Component {
             TrumpDuty: "",
             MechandiseFee: "",
             WaterwaysFee: "",
+            EntryFee: "",
         });
         this.setState({ data });
     }
@@ -109,7 +110,8 @@ class ProfitCenterAmountComponent extends Component {
                         amount += tryParseFloat(item.BaseDuty)
                             + tryParseFloat(item.TrumpDuty)
                             + tryParseFloat(item.MechandiseFee)
-                            + tryParseFloat(item.WaterwaysFee);
+                            + tryParseFloat(item.WaterwaysFee)
+                            + tryParseFloat(item.EntryFee);
                     })
                     let msg = "Total amount:" + amount.toFixed(2);
                     this.setState({ data, msg });
@@ -166,6 +168,13 @@ class ProfitCenterAmountComponent extends Component {
             accessor: 'WaterwaysFee', // String-based value accessors!
             Cell: this.renderEditable
         }, {
+            Header: 'Entry Fee',
+            headerStyle: hStyle,
+            style: hStyle,
+            width: 100,
+            accessor: 'EntryFee', // String-based value accessors!
+            Cell: this.renderEditable
+        }, {
             Header: '',
             headerStyle: hStyle,
             style: hStyle,
@@ -174,7 +183,7 @@ class ProfitCenterAmountComponent extends Component {
         }]
 
         const divStyle = {
-            width: 620,
+            width: 720,
         }
 
         return (<div style={divStyle}><input type="button" value="add new profit center" onClick={this.handleAdd} className="ms-ButtonHeightWidth"></input>

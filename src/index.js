@@ -217,7 +217,8 @@ function profitCenterTaxAmountValidation(categorySelect, amountText, profitCente
     amount += tryParseFloat(item.BaseDuty)
       + tryParseFloat(item.TrumpDuty)
       + tryParseFloat(item.MechandiseFee)
-      + tryParseFloat(item.WaterwaysFee);
+      + tryParseFloat(item.WaterwaysFee)
+      + tryParseFloat(item.EntryFee);
   });
   let invoiceAmount = amountText.val();
   // console.log(Math.round(parseFloat(invoiceAmount) * 100));
