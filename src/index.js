@@ -3,13 +3,16 @@ import "isomorphic-fetch";
 import $ from "jquery";
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ProfitCenterAmountComponent from "./profitCenterAmountComponent.js";
+import ProfitCenterAmountCustomsComponent from "./profitCenterAmountCustomsComponent.js";
+import ProfitCenterAmountFreightComponent from "./profitCenterAmountFreightComponent.js";
 var myUtility = require("my-utility").default;
 //import myUtility from "./Utility.js";
 
-var urlFactory = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('Factories')/Items";
-var urlProfitCenter = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('ProfitCenterCostCenter')/Items";
-var urlInvoice = "http://ideltaam.deltaww.com/sites/freight/_api/web/lists/GetByTitle('LogisticInvoices')/Items";
+var host = location.protocol + "//" + location.host;
+//console.log(host);
+var urlFactory = host + "/sites/freight/_api/web/lists/GetByTitle('Factories')/Items";
+var urlProfitCenter = host + "/sites/freight/_api/web/lists/GetByTitle('ProfitCenterCostCenter')/Items";
+var urlInvoice = host + "/sites/freight/_api/web/lists/GetByTitle('LogisticInvoices')/Items";
 var headers = {
   "accept": "application/json;odata=verbose",
 };
@@ -21,12 +24,15 @@ let getTR = element => {
 $(document).ready(async function () {
   // let amountText = $("[id^='Amount_']");
   let categorySelect = $("[id^='Category_'][type=radio]");
-  let profitCenterAmountTr = getTR($("#profitCenterAmountContainer"));
+  //let profitCenterAmountTr = getTR($("#profitCenterAmountContainer"));
   let taxAmountTr = getTR($("[id^='TaxAmount_']"));
   let companySelect = $("[id^='CompanyCode_']");
   let profitCenterTaxAmountText = $("[id^='ProfitCenterTaxAmount_']");//ProfitCenterTaxAmount_
   let profitCenterTaxAmountTr = getTR(profitCenterTaxAmountText);
   profitCenterTaxAmountText.hide();
+  let profitCenterAmountText = $("[id^='ProfitCenterAmount_']");//ProfitCenterTaxAmount_
+  let profitCenterAmountTr = getTR(profitCenterAmountText);
+  profitCenterAmountText.hide();
   // let customsRadio = getTR($("[id^='Category_'][type=radio][value='Customs']"));//Customs
   //customsRadio.hide();
   let categorySwitch = category => {
@@ -46,6 +52,7 @@ $(document).ready(async function () {
   })
 
   await profitCenterTaxAmountFunction(profitCenterTaxAmountText, companySelect);
+  await profitCenterAmountFunction(profitCenterAmountText, companySelect);
 
   var path = window.location.pathname;
   var page = path.split("/").pop();
@@ -135,6 +142,11 @@ $(document).ready(async function () {
 
       var vendorName = $("#ReactFieldRenderer_InvoiceType > select").val();
       var invoiceNumber = $("[id^='Title_'][id$='_$TextField']").val();
+      if (invoiceNumber.length > 16)
+      {
+        alert("invoice number cannot be longer than 16 characters");
+        return false;
+      }
       var company = $("[id^='CompanyCode_'][id$='_$DropDownChoice']").val();
       if (vendorName != null) {
         vendorName = vendorName.replace(/'/g, "''");
@@ -148,7 +160,7 @@ $(document).ready(async function () {
       if (id != "0") {
         url += " and ID ne " + id;
       }
-      console.log(url);
+      //console.log(url);
       //if (id == "0") {
       var d = await fetchJson(url);
       if (d.results.length > 0) {
@@ -159,6 +171,11 @@ $(document).ready(async function () {
       if (profitCenterTaxAmountValidation(categorySelect, amountText, profitCenterTaxAmountText) == false) {
         return false;
       }
+      if (profitCenterAmountValidation(categorySelect, amountText, profitCenterAmountText) == false) {
+        return false;
+      }
+      //console.log("test not save");
+      //return false;
     }
     catch (ex) {
       console.log(ex);
@@ -174,9 +191,9 @@ $(document).ready(async function () {
       alert("invoice date not correct");
       return false;
     }
-    console.log("original Save");
+    //console.log("original Save");
     var callOriginalSaveButtonClickHandler = setInterval(function () {
-      console.log("original Save2");
+      //console.log("original Save2");
       originalSaveButtonClickHandler();
       clearInterval(callOriginalSaveButtonClickHandler);
     }, 100);
@@ -233,6 +250,54 @@ function profitCenterTaxAmountValidation(categorySelect, amountText, profitCente
   return isValid;
 }
 
+function profitCenterAmountValidation(categorySelect, amountText, profitCenterAmountText) {
+  let freightMsg = $("#freightMsg");
+  freightMsg.text("");
+  if (categorySelect.filter(":checked").val() == "Customs") {
+    return true;
+  }
+  let text = profitCenterAmountText.val();
+  if (text == '') {
+    freightMsg.text("ProfitCenterAmount can't be empty");
+    return false;
+  }
+  let ProfitCenterAmounts = myParse(text);
+  if (ProfitCenterAmounts.length == 0) {
+    freightMsg.text("ProfitCenterAmount can't be empty");
+    return false;
+  }
+  let isValid = true;
+  let amount = 0;
+  let tryParseFloat = text => {
+    if (text == "") {
+      text = "0";
+    }
+    return parseFloat(text);
+  };
+  ProfitCenterAmounts.forEach(item => {
+    if (item.ProfitCenter == "") {
+      freightMsg.text("ProfitCenterAmount ProfitCenter can't be empty");
+      isValid = false;
+    }
+    if (item.Freight == "" && (item.Tariff == "" || item.Tariff == "0")){
+      freightMsg.text(item.ProfitCenter + " Freight & Tariff can't be both empty");
+      isValid = false;
+    }
+    amount += tryParseFloat(item.Freight);
+  });
+  let invoiceAmount = amountText.val();
+  // console.log(Math.round(parseFloat(invoiceAmount) * 100));
+  // console.log(Math.round(amount * 100));
+  if (Math.round(parseFloat(invoiceAmount) * 100) != Math.round(amount * 100)) {
+    freightMsg.text(`InvoiceAmount: ${invoiceAmount} and ProfitCenterAmount: ${amount.toFixed(2)} not match`);
+    isValid = false;
+  }
+  if (isValid) {
+    freightMsg.text("");
+  }
+  return isValid;
+}
+
 async function profitCenterTaxAmountFunction(profitCenterTaxAmountText, companySelect) {
   //profitCenterTaxAmountText.hide();
   //let companySelect = $("[id^='CompanyCode_']");
@@ -258,7 +323,7 @@ async function profitCenterTaxAmountFunction(profitCenterTaxAmountText, companyS
     profitCenterTaxAmountText.val(JSON.stringify(ProfitCenterTaxAmounts));
   };
   let customsComponent = ReactDOM.render(
-    <ProfitCenterAmountComponent
+    <ProfitCenterAmountCustomsComponent
       profitCenters={profitCenters}
       company={companySelect}
       profitCenterAmounts={ProfitCenterTaxAmounts}
@@ -269,6 +334,94 @@ async function profitCenterTaxAmountFunction(profitCenterTaxAmountText, companyS
     customsComponent.clearData();
     customsComponent.forceUpdate();
   });
+}
+
+async function profitCenterAmountFunction(profitCenterAmountText, companySelect) {
+  //profitCenterTaxAmountText.hide();
+  //let companySelect = $("[id^='CompanyCode_']");
+  let freightContainer = $("<div id='freightContainer'></div>");
+  profitCenterAmountText.after(freightContainer);
+  profitCenterAmountText.after($("<div id='freightMsg' style='color:red'></div>"));
+  let profitCenters;
+  await fetchProfitCenters()
+    .then(d => {
+      profitCenters = d.results.map(item => {
+        return {
+          ProfitCenter: item.Title,
+          Company: item.Company
+        }
+      });
+    });
+  let ProfitCenterAmounts = [];
+  console.log(profitCenterAmountText.val());
+  if (profitCenterAmountText.val() != "") {
+    ProfitCenterAmounts = myParse(profitCenterAmountText.val());
+  }
+  let updateProfitCenterAmounts = ProfitCenterAmounts => {
+    profitCenterAmountText.val(myStringify(ProfitCenterAmounts));
+  };
+  let freightComponent = ReactDOM.render(
+    <ProfitCenterAmountFreightComponent
+      profitCenters={profitCenters}
+      company={companySelect}
+      profitCenterAmounts={ProfitCenterAmounts}
+      onChange={updateProfitCenterAmounts} />, freightContainer[0]
+  );
+  companySelect.change(() => {
+    updateProfitCenterAmounts([]);
+    freightComponent.clearData();
+    freightComponent.forceUpdate();
+  });
+}
+
+function myParse(text){
+  console.log(text);
+  let objs=text.split(";").map(line=>{
+    let parts=line.split(":");
+    let ProfitCenter=parts[0];
+    let amounts=parts[1].split(",");
+    if (amounts.length==1){
+      return {
+        ProfitCenter:ProfitCenter,
+        Freight:amounts[0],
+        Tariff:"",
+        Inbound:"false"
+      }
+    } else {
+      return {
+        ProfitCenter:ProfitCenter,
+        Freight:amounts[0],
+        Tariff:amounts[1],
+        Inbound:amounts[2]
+      }
+    }
+  });
+  console.log(objs);
+  return objs;
+}
+
+function myStringify(myObjs){
+  let str="";
+  myObjs.forEach(obj=>{
+    let line=obj.ProfitCenter+":"+obj.Freight;
+    console.log(obj);
+    if (obj.Inbound=="false"){
+      obj.Tariff = "";
+      line+=",,false";
+    } else {
+      if (obj.Tariff==""){
+        obj.Tariff = "0";
+      }
+      line+=","+obj.Tariff+",true";
+    }
+    if (str==""){
+      str=line;
+    } else {
+      str+=";"+line;
+    }
+  })
+  console.log(str);
+  return str;
 }
 
 async function fetchFactories() {
@@ -286,7 +439,7 @@ async function fetchProfitCenters() {
 }
 
 function fetchJson(url) {
-  console.log(url);
+  //console.log(url);
   return fetch(url, {
     credentials: 'same-origin',
     headers: headers

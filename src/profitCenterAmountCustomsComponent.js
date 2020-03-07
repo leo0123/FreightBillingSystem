@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import ReactTable from "react-table";
 import 'react-table/react-table.css';
 
-class ProfitCenterAmountComponent extends Component {
+class ProfitCenterAmountCustomsComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -197,4 +197,4 @@ class ProfitCenterAmountComponent extends Component {
     }
 }
 
-export default ProfitCenterAmountComponent;
+export default ProfitCenterAmountCustomsComponent;

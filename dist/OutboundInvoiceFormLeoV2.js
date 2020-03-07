@@ -385,8 +385,8 @@ SPClientTemplates.TemplateManager.RegisterTemplateOverrides({
     Templates: {
         Fields: {
             'ProfitCenterAmount': {
-                NewForm: Freight.ProfitCenterAmountEditField,
-                EditForm: Freight.ProfitCenterAmountEditField,
+                //NewForm: Freight.ProfitCenterAmountEditField,
+                //EditForm: Freight.ProfitCenterAmountEditField,
                 DisplayForm: Freight.ProfitCenterAmountDisplayField
             },
             'InvoiceType': {
